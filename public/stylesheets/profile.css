@@ -1,0 +1,21 @@
+#username{
+	text-align: center;
+	font-size: 4.0em;
+}
+.jumbotron{
+	margin-top: 20px;
+}
+
+#cycleImg{
+	max-width: 40%;
+}
+
+#cycleDiv{
+	text-align: center;
+	font-size: 2em;
+}
+
+h2{
+	font-size: 1.4em;
+	text-decoration: underline solid;	
+}

@@ -1,0 +1,26 @@
+#fromMap,#toMap{
+	height: 500px;
+	width: 100%;
+
+}
+
+body{
+	font-family: Roboto;
+}
+
+#hourInput,#minuteInput{
+	display: inline;
+	width: 20%;
+ 
+}
+
+.hidden{
+	display: none;
+}
+
+#requestsDiv{
+    font-size: 2em;
+    background: #36bb0a;
+    color: white;
+    padding: 10px;
+}

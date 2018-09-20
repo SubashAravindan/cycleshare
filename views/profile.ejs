@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Profile</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="stylesheets/profile.css">
+
+</head>
+<body>
+	<%include partials/nav%>
+	<div class="container">
+		<div class="jumbotron">
+			<h1 id="username"><%=user.username%></h1>
+			<h3 id="credit">Credits : <%=user.creditBalance%></h3>
+		</div>
+		<div id="cycleDiv">
+			<h2>Cycle details :</h2>
+			<%if(user.cycle){%>
+			<p><strong>Model : </strong><%=user.cycle.name%></p>
+			<p>
+				<strong>Image : </strong>
+				<div class="text-center">
+					<img src="../cycleimages/<%=user.cycle.image%>" id="cycleImg">
+				</div>
+				
+			</p>
+			<div>
+				<a href="/user/cycle/edit" class="btn btn-primary">Edit cycle</a>
+			</div>
+			<form method="POST" action="/user/cycle?_method=DELETE">
+				<button class="btn btn-danger">Delete cycle</button>
+			</form>
+			<%}else{ %>
+			<h2 class="text-center text-muted">No cycle details given</h2>
+			<div>
+				<a href="/user/cycle/new" class="btn btn-success btn-lg">Add cycle</a>
+			</div>
+			<%}%>
+		</div>
+	</div>
+
+<!-- 	SCRIPT FOR UPDATING LOCATION IN DB -->
+	<script type="text/javascript">
+		navigator.geolocation.watchPosition((pos)=>{
+
+			currentLatLng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+			$.post("/user/location",{lastLocation:currentLatLng});
+		},null,{enableHighAccuracy:true})
+	</script>
+</body>
+</html>

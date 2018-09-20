@@ -1,0 +1,30 @@
+.hidden{
+	display: none;
+}
+
+.container{
+	margin-top: 150px;
+	min-width: 300px;
+	width: 40%;
+}
+
+#OKDiv{
+	border-radius: 7px;
+	padding: 5px;
+	border: 1px solid darkgreen;
+	color: darkgreen;
+	margin-bottom: 10px;
+	background: lightgreen;
+}
+#NotOKDiv{
+	border-radius: 7px;
+	padding: 5px;
+	border: 1px solid red;
+	color: red;
+	margin-bottom: 10px;
+	background: orange;
+}
+
+h1{
+	margin-bottom: 50px;
+}

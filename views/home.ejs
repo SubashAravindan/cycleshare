@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Home</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+	<link rel="stylesheet" type="text/css" href="stylesheets/home.css">
+</head>
+<body>
+
+	<%include partials/nav%>
+	<div id="requestsDiv" class="hidden">
+		There are <span id="requestCount"></span> pending requests. <a href="/requests">Click here</a> to see.
+	</div>
+	<h1 class="text-center">Cycle Share</h1>
+
+	<div class="container">
+
+
+		<div id="from">
+			<input type="text" id="fromInput" name="" class="form-control" placeholder="Enter your location">
+			<h2 class="text-center">OR</h2>
+			<h4>Choose in map :</h4>
+			<div class="mapContainer container"><div id="fromMap"></div></div>
+		</div>
+
+
+		<div id="destination">
+			<input type="text" id="toInput" name="" class="form-control" placeholder="Enter your destination">
+			<h2 class="text-center">OR</h2>
+			<h4>Choose in map :</h4>
+
+
+			<div class="mapContainer container"><div id="toMap"></div></div>
+		</div>
+
+		<div id="durationDiv">
+			<h2>Select duration of rent(min:15 minutes, max : 6 hrs)</h2>
+			<label for="hourInput">Hours : </label>
+			<input class="form-control" type="number" name="hours" id="hourInput" max="6" value="0">			
+			<label for="minuteInput">Minutes : </label>
+			<input class="form-control" type="number" name="minutes" id="minuteInput" max="60" value="15">
+		</div>
+ 		<div>
+			<button class="btn btn-success btn-lg hidden" id="submitBtn">Request Cycle</button>
+		</div>
+	</div>
+
+	
+
+	<script type="text/javascript">
+		var fromMap,toMap;
+		var fromMarker,toMarker;
+		var fromLat,fromLng,toLat,toLng;
+		var currentLatLng;
+		function initMap() {
+			fromInput=document.getElementById('fromInput');
+			toInput=document.getElementById('toInput');
+
+			//Get User postion
+			navigator.geolocation.watchPosition((pos)=>{
+				console.log("hi")
+
+
+				currentLatLng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+
+				//=====UPDATE USER LOCATION=========
+				$.post("/user/location",{lastLocation:currentLatLng,userId:"<%=currentUser.id%>"});
+
+				//Circle used for biaasing autocomplete results
+				circle=new google.maps.Circle({center:currentLatLng,radius:pos.coords.accuracy}) 
+
+
+				//Create map for from
+				fromMap=new google.maps.Map(document.getElementById('fromMap'),{center:currentLatLng,zoom:16});
+				toMap=new google.maps.Map(document.getElementById('toMap'),{center:currentLatLng,zoom:16});
+
+			//Add click listener to place marker for fromMap
+			fromMap.addListener("click",function(e){
+				console.log(e.latLng.lat());
+				console.log(e.latLng.lng());
+
+			//Place marker and save position
+				fromLat=e.latLng.lat();
+				fromLng=e.latLng.lng();
+				fromInput.value='';
+				if(fromMarker){
+					fromMarker.setPosition(e.latLng);
+				}else{
+					fromMarker= new google.maps.Marker({position:e.latLng,map:fromMap,draggable:true});
+				}
+				fromMap.panTo(e.latLng);
+			})
+
+			toMap.addListener("click",function(e){
+				console.log(e.latLng.lat());
+				console.log(e.latLng.lng());
+				
+			//Place marker and save position for toMap
+				toLat=e.latLng.lat();
+				toLng=e.latLng.lng();
+				toInput.value='';
+				if(toMarker){
+					toMarker.setPosition(e.latLng);
+				}else{
+					toMarker= new google.maps.Marker({position:e.latLng,map:toMap,draggable:true});
+				}
+				toMap.panTo(e.latLng);
+			})
+			
+			//Create autocomplete object
+			fromAutocomplete = new google.maps.places.Autocomplete(fromInput,{placeIdOnly:true,bounds:circle.getBounds()});
+			toAutocomplete = new google.maps.places.Autocomplete(toInput,{placeIdOnly:true,bounds:circle.getBounds()});
+
+			//Action if user selects place
+			fromAutocomplete.addListener("place_changed",()=>{getPlaceFromInput("from")})
+			toAutocomplete.addListener("place_changed",()=>{getPlaceFromInput("to")})
+
+
+			//Function to find place
+			function getPlaceFromInput(method){
+				if (method==="from") {
+					placeId=fromAutocomplete.getPlace().place_id;
+				}
+				else{
+					placeId=toAutocomplete.getPlace().place_id;
+				}
+
+				
+
+			//Get place details and set it	
+			service = new google.maps.places.PlacesService(method==="from"?fromMap:toMap);
+			service.getDetails({placeId:placeId,fields:["formatted_address", "geometry"]}, (place,status)=>{
+				if (status == google.maps.places.PlacesServiceStatus.OK){
+					if (method==="from") {
+						fromLat=place.geometry.location.lat();
+						fromLng=place.geometry.location.lng();						
+					} else {
+						toLat=place.geometry.location.lat();
+						toLng=place.geometry.location.lng();
+					}
+
+					(method==="from"?fromMap:toMap).panTo(place.geometry.location);
+				}
+			});
+
+			}
+										
+			},null,{enableHighAccuracy:true})
+			
+
+		}
+
+//========DISABLE AND ENABLE SUBMIT BTN=========
+	var interval=setInterval(function(){
+		if(fromLat&&toLat){
+			$("#submitBtn").removeClass("hidden")
+		}
+		else{
+			$("#submitBtn").addClass("hidden")
+		}
+	},1000)
+
+
+//======CREATE REQUEST==========
+	$("#submitBtn").click(()=>{
+		var data={
+			from:{
+				lat:fromLat,
+				lng:fromLng
+			},
+			to:{
+				lat:toLat,
+				lng:toLng
+			},
+			duration:{
+				minutes:$("#minuteInput").val(),
+				hours:$("#hourInput").val()
+			}
+		}
+		$.post("/request",data,(response)=>{
+			if (response==="1") {
+				window.location.href="/requested"
+			} 
+		});
+	})
+
+//=============CHECK FOR REQUEST========
+
+setInterval(checkRequest,1000);
+
+function checkRequest(){
+	if (currentLatLng) {
+		$.get("/checkrequests",{location:currentLatLng,userId:"<%=currentUser.id%>"},(data)=>{
+			console.log(data)
+			if (data.length) {
+				$("#requestsDiv").removeClass("hidden");
+				$("#requestCount").text(data.length)
+			} else {
+				$("#requestsDiv").addClass("hidden");
+			}
+		})		
+	}
+
+}
+
+	</script>
+
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWQfbfnn9X6q89Gc9J8z9-pxdXNtPr3iM&libraries=places&callback=initMap"
+    async defer></script>
+
+</body>
+</html>
